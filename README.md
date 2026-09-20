@@ -431,22 +431,6 @@ npm run dev
 > **Solution**: Absolutely! You can deploy the backend to Render, Railway, or Heroku, and the frontend to Vercel or Netlify. Just set your deployed server URL as the `ENDPOINT` in `Chat.jsx` (or inject it via an environment variable).
 </details>
 
----
-
-## 🗺️ Roadmap
-
-- [x] Room-based WebSocket routing
-- [x] Dynamic online user roster
-- [x] Admin welcome and leave broadcasts
-- [x] Glassmorphic responsive dark mode
-- [ ] **Typing Indicator**: Display *"Alex is typing..."* when a peer types
-- [ ] **Rich Media & File Sharing**: Upload images, audio clips, and documents
-- [ ] **Emoji & Reaction Matrix**: Tap messages to react with thumbs-up, heart, fire
-- [ ] **Message Persistence**: Optional MongoDB / PostgreSQL database archive
-- [ ] **Private 1-on-1 DMs**: Direct messaging alongside group chat rooms
-- [ ] **Audio/Video Calls**: WebRTC peer-to-peer audio and video rooms
-
----
 
 ## 🤝 Contributing
 
