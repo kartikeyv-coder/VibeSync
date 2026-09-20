@@ -1,16 +1,42 @@
 const express = require('express');
 const http = require('http');
 const socketio = require('socket.io')
-
+const multer = require('multer')
+const path = require('path')
+const cors = require('cors');
 const { addUser, removeUser, getUser, getUserInRoom } = require('./user.js');
 
 const port = process.env.PORT || 8000;
 
 const router = require('./router');
+const { error, timeStamp } = require('console');
 // const { text } = require('stream/consumers');
 
 //STEP-1 CREATE A APP FOR THE EXPRESS
 const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:5173'
+}));
+
+// Make uploaded files accessible
+app.use('/uploads', express.static('uploads'));
+
+//STEP-1.1 UPDATING THE BACKENDED FOR UPLOADING THE FILES IN THE CHAT APP
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+})
+
+const upload = multer({ storage });
+
+//STEP-1.2 MAKE UPLOADED FILES ACCESSIBLE
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // STEP-2 CREATING A SERVER A FROM THE HTTPS
 const server = http.createServer(app);
@@ -67,31 +93,38 @@ io.on('connection', (socket) => {
      */
 
     socket.on('sendMessage', (message, callback) => {
-        console.log('Message received from frontend:', message);
-
         const user = getUser(socket.id);
 
-        console.log('User found:', user);
-
         if (!user) {
-            console.log('User not found for socket:', socket.id);
             return callback('User not found');
         }
 
-        console.log('Sending message to room:', user.room);
+        // Send message to everyone in the room
+        if (typeof message === 'string') {
 
-        io.to(user.room).emit('message', {
-            user: user.name,
-            text: message
-        });
+            io.to(user.room).emit('message', {
+                user: user.name,
+                text: message,
+                timestamp: new Date().toISOString()
+            });
 
-        io.to(user.room).emit('roomData', {
-            room: user.room,
-            user: getUserInRoom(user.room)
-        });
+        } else {
 
-        callback();
-    })
+            io.to(user.room).emit('message', {
+                user: user.name,
+                type: message.type,
+                filename: message.filename,
+                url: message.url,
+                timestamp: new Date().toISOString()
+            });
+
+        }
+        if (callback) {
+
+            callback();
+        }
+    });
+
     socket.on('disconnect', () => {
         const user = removeUser(socket.id);
 
@@ -104,9 +137,36 @@ io.on('connection', (socket) => {
     })
 })
 
+
+//FILE UPLOAD ENDPOINT  
+app.post('/upload', upload.single('file'), (req, res) => {
+
+    if (!req.file) {
+        return res.status(400).json({
+            error: 'No file Uploaded'
+        });
+    }
+
+    console.log('File uploaded:', req.file);
+
+    res.json({
+        filename: req.file.originalname,
+        url: `http://localhost:${port}/uploads/${req.file.filename}`
+    })
+})
+
+app.use((err, req, res, next) => {
+    console.error('UPLOAD ERROR:', err);
+
+    res.status(500).json({
+        error: err.message
+    });
+});
+
 app.use(router);
 
 server.listen(port, () => console.log(`Server has Started on port ${port}`));
+
 
 /**
  * 

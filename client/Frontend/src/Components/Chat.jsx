@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 import queryString from 'query-string';
-
 import Infobar from './Infobar';
 import Input from './Input';
 import Messages from './Messages';
@@ -108,6 +107,40 @@ const Chat = () => {
 
   console.log('Current messages:', messages);
 
+  //SEND FILES
+
+  const sendFile = async (file) => {
+    try {
+      const formData = new FormData();
+
+      formData.append('file', file);
+
+      console.log('Uploading file:', file.name);
+
+      const response = await fetch('http://localhost:8000/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'File upload failed');
+      }
+
+      console.log('File uploaded:', data);
+
+      socket.emit('sendMessage', {
+        type: 'file',
+        filename: data.filename,
+        url: data.url
+      });
+
+    } catch (error) {
+      console.error('File Upload error:', error);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4">
 
@@ -124,6 +157,7 @@ const Chat = () => {
           message={message}
           setMessage={setMessage}
           sendMessage={sendMessage}
+          sendFile={sendFile}
         />
 
         <div className='w-full md:w-72 flex-shrink-0'>

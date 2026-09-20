@@ -7,7 +7,7 @@
 
 # ⚡ VibeSync
 
-### *Instant, Event-Driven Group Conversations in a Sleek Glassmorphic Interface*
+### *Instant, Event-Driven Group Conversations with Rich Media Sharing in a Sleek Glassmorphic Interface*
 
 [![GitHub Stars](https://img.shields.io/github/stars/kartikeyv-coder/VibeSync?style=for-the-badge&color=eab308&logo=star&logoColor=white)](https://github.com/kartikeyv-coder/VibeSync/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/kartikeyv-coder/VibeSync?style=for-the-badge&color=6366f1&logo=git&logoColor=white)](https://github.com/kartikeyv-coder/VibeSync/network/members)
@@ -16,6 +16,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.IO-4.8-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+[![Multer](https://img.shields.io/badge/Multer-2.4-f39c12?style=for-the-badge&logo=node.js&logoColor=white)](https://github.com/expressjs/multer)
 [![Node.js](https://img.shields.io/badge/Node.js-LTS-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-3b82f6.svg?style=for-the-badge)](LICENSE)
 
@@ -35,8 +36,9 @@
   <a href="#-feature-matrix">Features</a> •
   <a href="#-system-architecture">Architecture</a> •
   <a href="#-tech-stack-deep-dive">Tech Stack</a> •
-  <a href="#-socket-protocol-specification">Socket Protocol</a> •
+  <a href="#-socket--rest-protocol-specification">Protocol Specs</a> •
   <a href="#-ui--design-system">Design System</a> •
+  <a href="#-project-anatomy">Project Anatomy</a> •
   <a href="#-quick-start">Installation</a> •
   <a href="#-troubleshooting--faq">FAQ</a> •
   <a href="#-roadmap">Roadmap</a>
@@ -48,12 +50,14 @@
 
 ## 💡 The Pitch
 
-Most chat applications are either burdened by bloated dependencies, heavy database requirements, and difficult setup processes, or they look like abandoned proof-of-concept projects from 2014.
+Most chat applications are either burdened by bloated databases, convoluted authentication configs, and difficult setup processes, or they look like abandoned proof-of-concept projects from 2014.
 
 **VibeSync** strikes the perfect balance:
 - **Zero Configuration Barrier**: Spin up the backend and frontend in seconds without configuring external cloud databases.
-- **Microsecond WebSocket Latency**: Powered by Socket.IO rooms with lightweight in-memory user registry and room isolation.
-- **Modern Dark Glassmorphic Aesthetic**: Built using the bleeding-edge **Tailwind CSS v4** engine with dynamic backdrop filters, ambient neon pulses, and fluid gradients.
+- **Microsecond WebSocket Latency**: Powered by Socket.IO rooms with lightweight in-memory user registry and strict room channel isolation.
+- **Rich Media & File Sharing**: Effortlessly upload and share images, documents, and media clips with instant inline thumbnail previews.
+- **Precision Timestamps**: Localized timestamp rendering on every text and media message bubble.
+- **Modern Dark Glassmorphic Aesthetic**: Built using the bleeding-edge **Tailwind CSS v4** engine with dynamic backdrop filters, ambient neon accents, and fluid gradients.
 - **Bulletproof Room State**: Automated presence tracking, live membership counts, duplicate username blocking, and graceful socket disconnect cleanup.
 
 ---
@@ -64,7 +68,17 @@ Most chat applications are either burdened by bloated dependencies, heavy databa
   <tr>
     <td width="50%">
       <h3>🌐 Dynamic Multi-Room Channels</h3>
-      <p>Users can jump into any custom room instantly. Messages are scoped strictly to the room members—zero cross-talk, zero message leaks.</p>
+      <p>Users can jump into any custom room instantly. Messages and media are scoped strictly to the room members—zero cross-talk, zero message leaks.</p>
+    </td>
+    <td width="50%">
+      <h3>📎 Rich Media & File Sharing</h3>
+      <p>Upload and distribute images and files via a dedicated Multer REST pipeline. Inline image rendering directly in chat bubbles with click-to-view links.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🕒 Precision Message Timestamps</h3>
+      <p>Every message is tagged with an ISO timestamp on receipt and displayed formatted (<code>hh:mm</code>) in local time for transparent conversation flow.</p>
     </td>
     <td width="50%">
       <h3>👥 Real-Time Presence Sync</h3>
@@ -84,7 +98,7 @@ Most chat applications are either burdened by bloated dependencies, heavy databa
   <tr>
     <td width="50%">
       <h3>📜 Smooth Smart Auto-Scroll</h3>
-      <p>Utilizes <code>react-scroll-to-bottom</code> for frictionless auto-scrolling on new messages while preserving manual review capabilities.</p>
+      <p>Utilizes <code>react-scroll-to-bottom</code> for frictionless auto-scrolling on new incoming messages while preserving manual review capabilities.</p>
     </td>
     <td width="50%">
       <h3>💎 Ultra-Polished Glass UI</h3>
@@ -101,81 +115,81 @@ Most chat applications are either burdened by bloated dependencies, heavy databa
 
 ```mermaid
 graph TD
-    subgraph Client ["Client (React 18 + Vite)"]
+    subgraph Client ["Client (React 18 + Vite 8 + Tailwind v4)"]
         UI[Glassmorphic UI]
         Router[React Router v6]
         SocketClient[Socket.io-Client]
+        FileUploader[Multipart Form Uploader]
         
         Router --> UI
         UI <--> SocketClient
+        UI --> FileUploader
     end
 
-    subgraph Network ["WebSocket Transport"]
+    subgraph Network ["Dual Transport Network"]
         WSChannel((Bi-directional WS / WSS Stream))
+        HTTPChannel((REST Multipart / Static HTTP))
     end
 
-    subgraph Server ["Server (Node.js + Express 5)"]
+    subgraph Server ["Server (Node.js + Express 5 + Multer)"]
         SocketServer[Socket.IO Server Engine]
         RoomManager[In-Memory User & Room Registry]
-        ExpressRouter[Express Healthcheck Gateway]
+        ExpressRouter[Express Router & CORS Gateway]
+        MulterEngine[Multer File Storage Engine]
+        UploadsDir[(Disk Storage /uploads)]
         
         SocketServer <--> RoomManager
         SocketServer --- ExpressRouter
+        ExpressRouter --> MulterEngine
+        MulterEngine --> UploadsDir
+        ExpressRouter -. Static Serve .-> UploadsDir
     end
 
     SocketClient <====> WSChannel <====> SocketServer
+    FileUploader ====> HTTPChannel ====> ExpressRouter
 
     classDef client fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
     classDef server fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff;
     classDef network fill:#020617,stroke:#34d399,stroke-width:2px,color:#fff;
 
-    class UI,Router,SocketClient client;
-    class SocketServer,RoomManager,ExpressRouter server;
-    class WSChannel network;
+    class UI,Router,SocketClient,FileUploader client;
+    class SocketServer,RoomManager,ExpressRouter,MulterEngine,UploadsDir server;
+    class WSChannel,HTTPChannel network;
 ```
 
 ---
 
-### Socket Event Lifecycle
+### Media Upload & Message Lifecycle
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Alice as 👤 Alice (Client A)
-    participant Server as ⚡ Socket.IO Engine
+    participant Server as ⚡ Express & Socket.IO
+    participant Storage as 📁 Disk Storage (/uploads)
     actor Bob as 👤 Bob (Client B)
 
     rect rgb(15, 23, 42)
-        Note over Alice,Bob: 1. Room Handshake & Authorization
-        Alice->>Server: emit("join", { name: "Alice", room: "TechVibe" })
-        Server->>Server: addUser({ id, name, room })
-        alt Duplicate Name in Room
-            Server-->>Alice: callback({ error: "Username is taken" })
-        else Successful Registration
-            Server->>Server: socket.join("TechVibe")
-            Server-->>Alice: emit("message", { user: "admin", text: "Alice, welcome to the room TechVibe" })
-            Server-->>Bob: broadcast.to("TechVibe").emit("message", { user: "admin", text: "Alice has joined!" })
-            Server-->>Alice: io.to("TechVibe").emit("roomData", { room, user: [Alice, Bob] })
-            Server-->>Bob: io.to("TechVibe").emit("roomData", { room, user: [Alice, Bob] })
-            Server-->>Alice: callback()
-        end
+        Note over Alice,Bob: 1. File Upload Pipeline
+        Alice->>Server: POST /upload (FormData: file)
+        Server->>Storage: Store file as [timestamp]-[filename]
+        Storage-->>Server: File saved successfully
+        Server-->>Alice: 200 OK { filename, url }
     end
 
     rect rgb(20, 27, 45)
-        Note over Alice,Bob: 2. Real-Time Chat Broadcast
-        Alice->>Server: emit("sendMessage", "Hey everyone! 👋")
-        Server->>Server: getUser(socket.id)
-        Server-->>Alice: io.to("TechVibe").emit("message", { user: "Alice", text: "Hey everyone! 👋" })
-        Server-->>Bob: io.to("TechVibe").emit("message", { user: "Alice", text: "Hey everyone! 👋" })
-        Server-->>Alice: callback()
+        Note over Alice,Bob: 2. Real-Time Broadcast
+        Alice->>Server: emit("sendMessage", { type: "file", filename, url })
+        Server->>Server: Inject timestamp & look up user
+        Server-->>Alice: io.to(room).emit("message", { user, type, filename, url, timestamp })
+        Server-->>Bob: io.to(room).emit("message", { user, type, filename, url, timestamp })
     end
 
     rect rgb(15, 23, 42)
-        Note over Alice,Bob: 3. Disconnect Teardown
-        Alice-xServer: Tab closed / Connection drop
-        Server->>Server: removeUser(socket.id)
-        Server-->>Bob: io.to("TechVibe").emit("message", { user: "admin", text: "Alice has left." })
-        Server-->>Bob: io.to("TechVibe").emit("roomData", { room, user: [Bob] })
+        Note over Alice,Bob: 3. Media Rendering
+        Bob->>Server: GET /uploads/[filename]
+        Server-->>Bob: Serve raw image/file buffer
+        Note over Bob: Message component renders inline thumbnail preview!
     end
 ```
 
@@ -197,6 +211,8 @@ sequenceDiagram
 | **Linter** | [Oxlint](https://oxc.rs/) | `^1.79.0` | High-performance Rust-based JavaScript linting |
 | **Backend Runtime** | [Node.js](https://nodejs.org/) | `LTS (>=18)` | Server-side JavaScript execution environment |
 | **Web Server** | [Express](https://expressjs.com/) | `^5.2.1` | Minimalist HTTP routing and middleware framework |
+| **File Handling** | [Multer](https://github.com/expressjs/multer) | `^2.4.0` | Fast `multipart/form-data` disk storage middleware |
+| **Security / CORS** | [CORS](https://github.com/expressjs/cors) | `^2.8.6` | Cross-origin resource sharing middleware |
 | **Realtime Engine** | [Socket.io](https://socket.io/) | `^4.8.3` | Event-driven duplex network gateway with CORS |
 | **Dev Monitor** | [Nodemon](https://nodemon.io/) | `^3.1.14` | Hot-reloading watcher for local backend development |
 
@@ -204,55 +220,92 @@ sequenceDiagram
 
 ---
 
-## 📡 Socket Protocol Specification
+## 📡 Socket & REST Protocol Specification
 
-All WebSocket communication runs over custom named events. Here is the full contract:
+### WebSocket Events
 
-### 1. `join` (Client ➔ Server)
+#### 1. `join` (Client ➔ Server)
 Invoked when a user submits their nickname and target room.
 - **Direction**: Client ➔ Server
 - **Payload**:
   ```json
   {
     "name": "Alex",
-    "room": "ReactDevs"
+    "room": "TechVibe"
   }
   ```
-- **Callback**: Returns an `error` string if the username already exists in the room; otherwise returns empty on success.
+- **Callback**: Returns an `error` string if the username is taken in that room; otherwise returns empty on success.
 
-### 2. `sendMessage` (Client ➔ Server)
-Dispatched when a user submits a chat message.
+#### 2. `sendMessage` (Client ➔ Server)
+Dispatched when a user sends a text message or a rich file attachment.
 - **Direction**: Client ➔ Server
-- **Payload**: `"Hello everyone!"` (string)
-- **Callback**: Triggers after the server broadcasts the message to the target room.
-
-### 3. `message` (Server ➔ Client)
-Emitted by the server whenever a new chat or system message occurs.
-- **Direction**: Server ➔ Client
-- **Payload**:
+- **Payload (Text)**: `"Hello everyone!"` *(string)*
+- **Payload (File Attachment)**:
   ```json
   {
-    "user": "Alex", // Or "admin" for system-generated events
-    "text": "Hello everyone!"
+    "type": "file",
+    "filename": "screenshot.png",
+    "url": "http://localhost:8000/uploads/1726861200000-screenshot.png"
+  }
+  ```
+- **Callback**: Invoked after server distributes the message.
+
+#### 3. `message` (Server ➔ Client)
+Emitted by the server to all users in the room when a new message or announcement occurs.
+- **Direction**: Server ➔ Client
+- **Payload (Text Message)**:
+  ```json
+  {
+    "user": "Alex",
+    "text": "Hello everyone!",
+    "timestamp": "2026-09-21T01:20:00.000Z"
+  }
+  ```
+- **Payload (File Message)**:
+  ```json
+  {
+    "user": "Alex",
+    "type": "file",
+    "filename": "design-mockup.png",
+    "url": "http://localhost:8000/uploads/1726861200000-design-mockup.png",
+    "timestamp": "2026-09-21T01:20:00.000Z"
   }
   ```
 
-### 4. `roomData` (Server ➔ Client)
+#### 4. `roomData` (Server ➔ Client)
 Broadcasts live room member list changes when users enter or exit.
 - **Direction**: Server ➔ Client
 - **Payload**:
   ```json
   {
-    "room": "ReactDevs",
+    "room": "TechVibe",
     "user": [
-      { "id": "4kZ...k9A", "name": "alex", "room": "reactdevs" },
-      { "id": "9pQ...r3B", "name": "sarah", "room": "reactdevs" }
+      { "id": "4kZ...k9A", "name": "alex", "room": "techvibe" },
+      { "id": "9pQ...r3B", "name": "sarah", "room": "techvibe" }
     ]
   }
   ```
 
-### 5. `disconnect` (Socket Lifecycle)
-Triggered automatically when a socket drops connection, refreshing room rosters.
+---
+
+### REST API Endpoints
+
+#### `POST /upload`
+Uploads a media file or document using `multipart/form-data`.
+- **Form Key**: `file` (single file)
+- **Response (`200 OK`)**:
+  ```json
+  {
+    "filename": "dashboard.png",
+    "url": "http://localhost:8000/uploads/1726861200000-dashboard.png"
+  }
+  ```
+
+#### `GET /uploads/:filename`
+Serves the uploaded static media file with caching and content headers.
+
+#### `GET /`
+Server health check gateway confirming the backend is active.
 
 ---
 
@@ -269,10 +322,13 @@ VibeSync was built from the ground up to feel like a high-end desktop client:
 |  | [admin] Alex, welcome to the room ReactDevs     | | ONLINE USERS (2)   | |
 |  |                                                 | |                    | |
 |  | [Sarah]: Does anyone have experience with v4?   | | ● Alex             | |
-|  |                                                 | | ● Sarah            | |
-|  |               [You]: Yes, the new engine is 🔥  | |                    | |
+|  |                                      10:42 PM   | | ● Sarah            | |
+|  |                                                 | |                    | |
+|  |               [You]: Check out this new UI! 📎  | |                    | |
+|  |               [ 🖼️ image preview 300px ]        | |                    | |
+|  |                                      10:43 PM   | |                    | |
 |  +-------------------------------------------------+ +--------------------+ |
-|  [ Type a message...                             ] [ Send Message ]         |
+|  [ 📎 ] [ Type a message...                      ] [ Send ↗ ]               |
 +-----------------------------------------------------------------------------+
 ```
 
@@ -281,7 +337,8 @@ VibeSync was built from the ground up to feel like a high-end desktop client:
 - **Atmosphere**: Deep cosmic radial blend (`from-slate-950 via-slate-900 to-indigo-950`).
 - **Glass Surfaces**: `bg-slate-900/80 backdrop-blur-xl border border-slate-800`.
 - **Active Presence**: Emerald neon glow (`#34d399` with `drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]`).
-- **Typography**: Responsive, crisp sans-serif with distinct color states for admin vs. friend vs. self.
+- **Rich Media Previews**: Image thumbnail containers (`max-w-[300px] rounded-lg`) with external tab links.
+- **Message Time Indicators**: Subtle micro-typography (`text-[10px] opacity-70 block text-right`).
 - **Tactile Inputs**: Focus rings featuring Indigo / Cyan transitions (`focus:border-indigo-500`).
 
 ---
@@ -300,11 +357,11 @@ VibeSync/
 │       ├── src/
 │       │   ├── assets/             # Brand logos & media
 │       │   ├── Components/         # Modular React UI components
-│       │   │   ├── Chat.jsx        # Root chat screen, socket listener lifecycle
+│       │   │   ├── Chat.jsx        # Root chat screen, file upload handler & socket listeners
 │       │   │   ├── Infobar.jsx     # Header bar with room name & exit link
-│       │   │   ├── Input.jsx       # Chat input controller with Enter-key submit
+│       │   │   ├── Input.jsx       # Input controller with attachment trigger & Enter submit
 │       │   │   ├── Join.jsx        # Landing authentication & room selection form
-│       │   │   ├── Message.jsx     # Individual message bubble (Self vs Other style)
+│       │   │   ├── Message.jsx     # Bubble renderer for text, images, attachments & timestamps
 │       │   │   ├── Messages.jsx    # Scroll container powered by react-scroll-to-bottom
 │       │   │   └── TextContainer.jsx # Online active users sidebar roster
 │       │   ├── Icon/               # Status indicator icons
@@ -316,7 +373,8 @@ VibeSync/
 │       └── vite.config.js          # Vite build configuration with Tailwind plugin
 │
 ├── server/                         # Backend engine root
-│   ├── index.js                    # Express initialization, HTTP server & Socket.IO bindings
+│   ├── uploads/                    # Local disk storage for uploaded images & media
+│   ├── index.js                    # Express, Multer upload route & Socket.IO bindings
 │   ├── router.js                   # Root router health check (GET /)
 │   ├── user.js                     # In-memory user state functions (add, remove, query)
 │   └── package.json                # Server scripts & dependencies
@@ -328,11 +386,11 @@ VibeSync/
 
 ## 🚀 Quick Start
 
-Get a local copy running up and chatting in under 60 seconds!
+Get a local copy running and chatting with media sharing in under 60 seconds!
 
 ### Prerequisites
 
-Ensure you have the following installed on your machine:
+Ensure you have the following installed:
 - **Node.js**: `v18.0.0` or higher
 - **npm**: `v9.0.0` or higher (or `yarn` / `pnpm` / `bun`)
 
@@ -379,12 +437,12 @@ npm run dev
   ➜  Network: use --host to expose
 ```
 
-### Step 4: Start Chatting!
+### Step 4: Start Chatting & Sharing Files!
 
 1. Open `http://localhost:5173` in your browser.
 2. Enter your Name (e.g. `Alex`) and Room (e.g. `GamingLounge`), then click **Sign In**.
 3. Open an **Incognito Window** or another browser, enter a second Name (e.g. `Sam`) and the **same Room** (`GamingLounge`).
-4. Watch live presence update immediately and chat with zero delay!
+4. Send text messages, click **📎** to upload an image or document, and watch it sync across all clients in real time!
 
 ---
 
@@ -426,21 +484,28 @@ npm run dev
 </details>
 
 <details>
+<summary><strong>Q: Where are uploaded files saved?</strong></summary>
+
+> **Solution**: Files uploaded through the chat are saved to `server/uploads/` with a unique timestamp prefix (e.g. `1726861200000-photo.jpg`) and served via `http://localhost:8000/uploads/:filename`.
+</details>
+
+<details>
 <summary><strong>Q: Can I deploy the backend and frontend separately?</strong></summary>
 
-> **Solution**: Absolutely! You can deploy the backend to Render, Railway, or Heroku, and the frontend to Vercel or Netlify. Just set your deployed server URL as the `ENDPOINT` in `Chat.jsx` (or inject it via an environment variable).
+> **Solution**: Absolutely! You can deploy the backend to Render, Railway, or Heroku, and the frontend to Vercel or Netlify. Just set your deployed server URL as the `ENDPOINT` and file upload destination in `Chat.jsx` (or inject it via an environment variable).
 </details>
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] Room-based WebSocket routing
-- [x] Dynamic online user roster
-- [x] Admin welcome and leave broadcasts
-- [x] Glassmorphic responsive dark mode
+- [x] **Room-based WebSocket routing**
+- [x] **Dynamic online user roster & presence count**
+- [x] **Admin welcome and leave broadcasts**
+- [x] **Glassmorphic responsive dark mode with Tailwind CSS v4**
+- [x] **Rich Media & File Sharing (Multer + Express static files)**
+- [x] **Message Timestamps & Localized Formatting**
 - [ ] **Typing Indicator**: Display *"Alex is typing..."* when a peer types
-- [ ] **Rich Media & File Sharing**: Upload images, audio clips, and documents
 - [ ] **Emoji & Reaction Matrix**: Tap messages to react with thumbs-up, heart, fire
 - [ ] **Message Persistence**: Optional MongoDB / PostgreSQL database archive
 - [ ] **Private 1-on-1 DMs**: Direct messaging alongside group chat rooms
