@@ -495,6 +495,7 @@ npm run dev
 > **Solution**: Absolutely! You can deploy the backend to Render, Railway, or Heroku, and the frontend to Vercel or Netlify. Just set your deployed server URL as the `ENDPOINT` and file upload destination in `Chat.jsx` (or inject it via an environment variable).
 </details>
 
+<<<<<<< HEAD
 ---
 
 ## 🗺️ Roadmap
@@ -512,6 +513,8 @@ npm run dev
 - [ ] **Audio/Video Calls**: WebRTC peer-to-peer audio and video rooms
 
 ---
+=======
+>>>>>>> 34202a25aacfc61f026fa3336fa905f63e2ce67b
 
 ## 🤝 Contributing
 
