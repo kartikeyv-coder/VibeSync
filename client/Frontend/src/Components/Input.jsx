@@ -4,13 +4,15 @@ const Input = ({ message, setMessage, sendMessage }) => {
   return (
     <form className="flex items-center gap-2 p-3 bg-slate-900/80 border-t border-slate-800 rounded-b-2xl">
       <input
-        type="text"
+        type="text"   
         className="flex-1 px-4 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
         placeholder="Type a message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={(e) => (e.key === 'Enter' ? sendMessage(e) : null)}
       />
+
+
       
       <button
         type="submit"
