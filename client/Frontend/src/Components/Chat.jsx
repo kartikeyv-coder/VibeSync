@@ -6,6 +6,7 @@ import Infobar from './Infobar';
 import Input from './Input';
 import Messages from './Messages';
 import TextContainer from './TextContainer';
+import { useRef } from 'react';
 
 const ENDPOINT = 'http://localhost:8000';
 
@@ -19,6 +20,7 @@ const Chat = () => {
   const [user, setUser] = useState([])
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [typingUser, setTypingUser] = useState('');
 
   useEffect(() => {
     // Get name and room from URL
@@ -47,6 +49,7 @@ const Chat = () => {
 
     // Listen for messages
     socket.on('message', (message) => {
+
       console.log(' Message received:', message);
 
       setMessages((prevMessages) => [
@@ -54,6 +57,15 @@ const Chat = () => {
         message
       ]);
     });
+
+    //Adding Interface when the user is typing
+    socket.on('typing', ({ user, isTyping }) => {
+      if (isTyping) {
+        setTypingUser(`${user} is Typing...`)
+      } else {
+        setTypingUser('')
+      }
+    })
 
     socket.on('roomData', ({ user }) => {
       console.log('Online User:', user)
@@ -97,13 +109,17 @@ const Chat = () => {
       return;
     }
 
-    console.log(' Sending:', message);
+    console.log('Sending:', message);
+
+    // Stop typing immediately when sending
+    socket.emit('typing', false);
 
     socket.emit('sendMessage', message, () => {
-      console.log(' Message sent successfully');
+      console.log('Message sent successfully');
       setMessage('');
     });
   };
+
 
   console.log('Current messages:', messages);
 
@@ -141,6 +157,25 @@ const Chat = () => {
     }
   };
 
+  //Function which will handle 
+
+  let typingTimeout = useRef(null);
+
+  const handleTyping = (value) => {
+    if (value.length > 0) {
+      socket.emit('typing', true)
+
+      clearTimeout(typingTimeout)
+      typingTimeout = setTimeout(() => {
+        socket.emit('typing', false);
+      }, 1000)
+    } else {
+      clearInterval(typingTimeout)
+
+      socket.emit('typing', false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4">
 
@@ -153,11 +188,19 @@ const Chat = () => {
           name={name}
         />
 
+
+        {typingUser && (
+          <div className="px-4 py-1 text-xs text-slate-500">
+            {typingUser}
+          </div>
+        )}
+
         <Input
           message={message}
           setMessage={setMessage}
           sendMessage={sendMessage}
           sendFile={sendFile}
+          handleTyping={handleTyping}
         />
 
         <div className='w-full md:w-72 flex-shrink-0'>
