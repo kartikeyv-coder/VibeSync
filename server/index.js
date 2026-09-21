@@ -88,6 +88,24 @@ io.on('connection', (socket) => {
     })
 
     /**
+     * Typing Indicator
+     */
+    socket.on('typing', (isTyping) => {
+        const user = getUser(socket.id)
+
+        if (!user) {
+            return;
+        }
+
+        socket.broadcast.to(user.room).emit('typing', {
+            user: user.name,
+            isTyping
+        })
+    })
+
+
+
+    /**
      * User Generated message
      * 
      */
