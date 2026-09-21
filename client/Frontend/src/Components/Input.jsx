@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRef } from 'react';
 
-const Input = ({ message, setMessage, sendMessage, sendFile }) => {
+const Input = ({ message, setMessage, sendMessage, sendFile, handleTyping }) => {
 
   const FileInputRef = useRef(null);
 
@@ -46,7 +46,10 @@ const Input = ({ message, setMessage, sendMessage, sendFile }) => {
         className="flex-1 px-4 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
         placeholder="Type a message..."
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={(e) => {
+          setMessage(e.target.value)
+          handleTyping(e.target.value)
+        }}
         onKeyPress={(e) => (e.key === 'Enter' ? sendMessage(e) : null)}
       />
 

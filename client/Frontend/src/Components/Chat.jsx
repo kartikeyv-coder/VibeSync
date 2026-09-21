@@ -7,6 +7,7 @@ import Input from './Input';
 import Messages from './Messages';
 import TextContainer from './TextContainer';
 import { useRef } from 'react';
+import Navbar from './Navbar';
 
 const ENDPOINT = 'http://localhost:8000';
 
@@ -177,39 +178,44 @@ const Chat = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4">
+    <div>
 
-      <div className="flex flex-col w-full max-w-2xl h-[80vh] bg-slate-900/10 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl justify-between">
+      <Navbar />
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-4 pt-25">
 
-        <Infobar room={room} />
-
-        <Messages
-          messages={messages}
-          name={name}
-        />
+        <div className="flex flex-col w-full max-w-4xl h-[80vh] bg-slate-900/10 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl justify-between">
 
 
-        {typingUser && (
-          <div className="px-4 py-1 text-xs text-slate-500">
-            {typingUser}
+          <Infobar room={room} />
+
+          <Messages
+            messages={messages}
+            name={name}
+          />
+
+
+          {typingUser && (
+            <div className="px-4 py-1 text-xs text-slate-500">
+              {typingUser}
+            </div>
+          )}
+
+          <Input
+            message={message}
+            setMessage={setMessage}
+            sendMessage={sendMessage}
+            sendFile={sendFile}
+            handleTyping={handleTyping}
+          />
+
+          <div className='w-full md:w-72 flex-shrink-0'>
+
+            <TextContainer user={user} />
           </div>
-        )}
 
-        <Input
-          message={message}
-          setMessage={setMessage}
-          sendMessage={sendMessage}
-          sendFile={sendFile}
-          handleTyping={handleTyping}
-        />
-
-        <div className='w-full md:w-72 flex-shrink-0'>
-
-          <TextContainer user={user} />
         </div>
 
       </div>
-
     </div>
   );
 };
