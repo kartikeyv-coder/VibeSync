@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRef } from 'react';
+import VoiceInput from './VoiceInput';
 
 const Input = ({ message, setMessage, sendMessage, sendFile, handleTyping }) => {
 
@@ -52,6 +53,9 @@ const Input = ({ message, setMessage, sendMessage, sendFile, handleTyping }) => 
         }}
         onKeyPress={(e) => (e.key === 'Enter' ? sendMessage(e) : null)}
       />
+
+      <VoiceInput setMessage={setMessage} />
+
 
       <button
         type="submit"
