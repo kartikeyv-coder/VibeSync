@@ -40,8 +40,10 @@
   <a href="#-ui--design-system">Design System</a> •
   <a href="#-project-anatomy">Project Anatomy</a> •
   <a href="#-quick-start">Installation</a> •
+  <a href="#%EF%B8%8F-environment-configuration">Configuration</a> •
+  <a href="#-production-deployment-guide">Deployment</a> •
   <a href="#-troubleshooting--faq">FAQ</a> •
-  <a href="#-roadmap">Roadmap</a>
+  <a href="#%EF%B8%8F-roadmap">Roadmap</a>
 </p>
 
 </div>
@@ -58,6 +60,7 @@ Most chat applications are either burdened by bloated databases, convoluted auth
 - **Rich Media & File Sharing**: Effortlessly upload and share images, documents, and media clips with instant inline thumbnail previews.
 - **Precision Timestamps**: Localized timestamp rendering on every text and media message bubble.
 - **Modern Dark Glassmorphic Aesthetic**: Built using the bleeding-edge **Tailwind CSS v4** engine with dynamic backdrop filters, ambient neon accents, and fluid gradients.
+- **Interactive Voice & Typing States**: Live peer typing broadcasts and browser-native voice-to-text dictation with dynamic mic sensitivity and volume analysis.
 - **Bulletproof Room State**: Automated presence tracking, live membership counts, duplicate username blocking, and graceful socket disconnect cleanup.
 
 ---
@@ -103,6 +106,16 @@ Most chat applications are either burdened by bloated databases, convoluted auth
     <td width="50%">
       <h3>💎 Ultra-Polished Glass UI</h3>
       <p>Built with high-contrast slate palettes, glowing border accents, custom scrollbars, and tactile interactive button feedback.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>✍️ Real-Time Typing Indicators</h3>
+      <p>Broadcasts responsive <i>"Alex is typing..."</i> notifications to room peers with automated debounce handling as soon as a user enters text.</p>
+    </td>
+    <td width="50%">
+      <h3>🎙️ Voice-to-Text Input & Audio Meter</h3>
+      <p>Hands-free voice transcription powered by the Web Speech API with real-time Web Audio API frequency analysis, volume metering, and mic sensitivity controls.</p>
     </td>
   </tr>
 </table>
@@ -214,6 +227,8 @@ sequenceDiagram
 | **File Handling** | [Multer](https://github.com/expressjs/multer) | `^2.4.0` | Fast `multipart/form-data` disk storage middleware |
 | **Security / CORS** | [CORS](https://github.com/expressjs/cors) | `^2.8.6` | Cross-origin resource sharing middleware |
 | **Realtime Engine** | [Socket.io](https://socket.io/) | `^4.8.3` | Event-driven duplex network gateway with CORS |
+| **Speech Recognition** | [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) | Native | In-browser real-time voice-to-text dictation |
+| **Audio Processing** | [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) | Native | Real-time microphone audio frequency and volume analysis |
 | **Dev Monitor** | [Nodemon](https://nodemon.io/) | `^3.1.14` | Hot-reloading watcher for local backend development |
 
 </div>
@@ -283,6 +298,18 @@ Broadcasts live room member list changes when users enter or exit.
       { "id": "4kZ...k9A", "name": "alex", "room": "techvibe" },
       { "id": "9pQ...r3B", "name": "sarah", "room": "techvibe" }
     ]
+  }
+  ```
+
+#### 5. `typing` (Client ⇄ Server)
+Dispatched when a user types into the message input field to announce real-time typing status.
+- **Direction**: Client ➔ Server ➔ Room Peers (via broadcast)
+- **Client Emit Payload**: `true` | `false` *(boolean)*
+- **Server Broadcast Payload**:
+  ```json
+  {
+    "user": "Alex",
+    "isTyping": true
   }
   ```
 
@@ -359,11 +386,13 @@ VibeSync/
 │       │   ├── Components/         # Modular React UI components
 │       │   │   ├── Chat.jsx        # Root chat screen, file upload handler & socket listeners
 │       │   │   ├── Infobar.jsx     # Header bar with room name & exit link
-│       │   │   ├── Input.jsx       # Input controller with attachment trigger & Enter submit
+│       │   │   ├── Input.jsx       # Input controller with attachment trigger, voice button & typing handler
 │       │   │   ├── Join.jsx        # Landing authentication & room selection form
 │       │   │   ├── Message.jsx     # Bubble renderer for text, images, attachments & timestamps
 │       │   │   ├── Messages.jsx    # Scroll container powered by react-scroll-to-bottom
-│       │   │   └── TextContainer.jsx # Online active users sidebar roster
+│       │   │   ├── Navbar.jsx      # Top glassmorphic header with navigation & action buttons
+│       │   │   ├── TextContainer.jsx # Online active users sidebar roster
+│       │   │   └── VoiceInput.jsx  # Speech recognition & real-time Web Audio volume visualizer
 │       │   ├── Icon/               # Status indicator icons
 │       │   ├── App.jsx             # React Router routing setup
 │       │   ├── index.css           # Tailwind v4 import & CSS reset
@@ -466,6 +495,63 @@ npm run dev
 
 ---
 
+## ⚙️ Environment Configuration
+
+VibeSync works out-of-the-box for local testing with zero environment configuration needed. For customized setups or remote deployments, you can configure both layers:
+
+### Backend (`/server`)
+
+| Variable | Default | Purpose |
+|:---|:---|:---|
+| `PORT` | `8000` | Port on which the Express and Socket.IO servers listen |
+| `CLIENT_ORIGIN` | `http://localhost:5173` | Allowed frontend origin for CORS policies |
+
+### Frontend (`/client/Frontend`)
+
+The client communicates with the server via the `ENDPOINT` variable defined in `Chat.jsx`:
+
+```javascript
+// client/Frontend/src/Components/Chat.jsx
+const ENDPOINT = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+```
+
+Optionally define a `.env` file in `client/Frontend/`:
+```env
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+---
+
+## 🌐 Production Deployment Guide
+
+Deploy VibeSync to modern cloud platforms in a couple of steps:
+
+### 1. Deploy the Backend (Render / Railway / Fly.io)
+
+1. Connect your repository to your cloud provider and set the **Root Directory** to `server`.
+2. Configure build & start commands:
+   - **Build Command**: `npm install`
+   - **Start Command**: `node index.js`
+3. Add Environment Variable:
+   - `PORT`: `8000` (or allow the platform to auto-assign `PORT`)
+4. Note your deployed backend URL (e.g. `https://vibesync-server.onrender.com`).
+
+> [!NOTE]
+> For production media persistence across container restarts, consider attaching a persistent disk volume to `/uploads` or streaming files to AWS S3 / Cloudinary.
+
+### 2. Deploy the Frontend (Vercel / Netlify)
+
+1. Connect your repository and select the **Root Directory** as `client/Frontend`.
+2. Set build settings:
+   - **Framework Preset**: `Vite`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. Add Environment Variable:
+   - `VITE_BACKEND_URL`: `https://vibesync-server.onrender.com`
+4. Deploy! Your glassmorphic chat client is now live worldwide.
+
+---
+
 ## ❓ Troubleshooting & FAQ
 
 <details>
@@ -475,6 +561,13 @@ npm run dev
 > ```javascript
 > const ENDPOINT = 'http://localhost:8000';
 > ```
+> Also verify that the upload fetch call in `sendFile` targets `${ENDPOINT}/upload`.
+</details>
+
+<details>
+<summary><strong>Q: Why does voice recognition not work in my browser?</strong></summary>
+
+> **Solution**: The Web Speech API requires browser support (`window.SpeechRecognition` or `window.webkitSpeechRecognition`, supported on Google Chrome, Edge, and Safari). Additionally, browsers require a secure connection (`https://` or `localhost`) to grant microphone access.
 </details>
 
 <details>
@@ -492,10 +585,9 @@ npm run dev
 <details>
 <summary><strong>Q: Can I deploy the backend and frontend separately?</strong></summary>
 
-> **Solution**: Absolutely! You can deploy the backend to Render, Railway, or Heroku, and the frontend to Vercel or Netlify. Just set your deployed server URL as the `ENDPOINT` and file upload destination in `Chat.jsx` (or inject it via an environment variable).
+> **Solution**: Absolutely! Follow the [Production Deployment Guide](#-production-deployment-guide) above to deploy the backend to Render/Railway and the frontend to Vercel/Netlify.
 </details>
 
-<<<<<<< HEAD
 ---
 
 ## 🗺️ Roadmap
@@ -506,15 +598,14 @@ npm run dev
 - [x] **Glassmorphic responsive dark mode with Tailwind CSS v4**
 - [x] **Rich Media & File Sharing (Multer + Express static files)**
 - [x] **Message Timestamps & Localized Formatting**
-- [ ] **Typing Indicator**: Display *"Alex is typing..."* when a peer types
+- [x] **Live Typing Indicator**: Display *"Alex is typing..."* when a peer types
+- [x] **Voice-to-Text Input**: Dictate messages using SpeechRecognition & Web Audio API
 - [ ] **Emoji & Reaction Matrix**: Tap messages to react with thumbs-up, heart, fire
 - [ ] **Message Persistence**: Optional MongoDB / PostgreSQL database archive
 - [ ] **Private 1-on-1 DMs**: Direct messaging alongside group chat rooms
 - [ ] **Audio/Video Calls**: WebRTC peer-to-peer audio and video rooms
 
 ---
-=======
->>>>>>> 34202a25aacfc61f026fa3336fa905f63e2ce67b
 
 ## 🤝 Contributing
 
