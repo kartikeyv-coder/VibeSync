@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 const VoiceInput = ({ setMessage }) => {
 
@@ -88,12 +88,12 @@ const VoiceInput = ({ setMessage }) => {
             recognition.onerror = (e) => {
                 console.error('Speech Recognition error: ', e.error);
                 setIsListening(false);
-                stopMicrophone()
+                StopMicrophone()
             };
 
             recognition.onend = () => {
                 setIsListening(false);
-                stopMicrophone()
+                StopMicrophone()
             };
 
             recognition.start();
@@ -115,18 +115,19 @@ const VoiceInput = ({ setMessage }) => {
 
         const dataArray = new Uint8Array(analyserRef.frequencyBinCount);
 
+        //this will store the waveform of the audio signal
         analyzer.getByteTimeDomainData(dataArray);
-
+        //here it is to calculate the strength of the signal
         let sum = 0;
 
         for (let i = 0; i < dataArray.length; i++) {
             const normalized = (dataArray[i] - 128) / 128;
-
+            //this will calculate the total amount of energy of the  audio sample
             sum += normalized * normalized
         }
-
+        // A useful method to calculate   the average strength of the audio signal.
         const rms = Math.sqrt(sum / dataArray.length);
-
+        //the volume will not   go above the 100
         const currentVolume = Math.min(rms * 500, 100);
 
         setVolume(currentVolume);
@@ -134,19 +135,81 @@ const VoiceInput = ({ setMessage }) => {
         animationRef.current = requestAnimationFrame(checkVolume)
     }
 
+    //Function to stop the Microphone 
+    const StopMicrophone = () => {
+        if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current)
+        }
+
+        if (streamRef) {
+            streamRef.current?.getTracks()?.forEach(track => track.stop());
+            streamRef.current = null;
+        }
+
+        analyserRef.current = null
+
+    }
+
+
+    //useEffect
+
+    useEffect(() => {
+        return () => {
+            StopMicrophone();
+        }
+    }, [])
+
+
 
 
     return (
-        <button
-            type='button'
-            onClick={startListening}
-            className={`px-4 py-2.5 ${islistening
-                ? 'bg-red-600'
-                : 'bg-slate-800 hover:bg-slate-700'
-                } text-white rounded-xl transition duration-200`}
-        >
-            {islistening ? '🔴' : '🎙️'}
-        </button>
+
+        <div className='flex items-center gap-3'>
+            {/* Sensitivity Slider */}
+            <div className='flex flex-col'>
+                <label className='text-sm text-gray-600'>
+                    Mic Senstivity: {sensitivity}%
+                </label>
+
+                <input
+                    type="range"
+                    min='1'
+                    max='100'
+                    value={sensitivity}
+                    onChange={(e) => { setSensitivity(Number(e.target.value)) }}
+                />
+            </div>
+            <button
+                type='button'
+                onClick={startListening}
+                className={`px-4 py-2.5 ${islistening
+                    ? 'bg-red-600'
+                    : 'bg-slate-800 hover:bg-slate-700'
+                    } text-white rounded-xl transition duration-200`}
+            >
+                {islistening ? '🔴' : '🎙️'}
+            </button>
+
+            {/* this tag is for the volume  */}
+            <div className='w-32'>
+
+                <div className='text-xs text-gray-400'>
+                    Mic Level: {Math.round(volume)}%
+                </div>
+
+                <div className='h-2 bg-gray-300 rounded'>
+
+                    <div className='h-2 bg-green-500 rounded'
+                        style={{
+                            width: `${volume}%`
+                        }}>
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
     )
 }
 
