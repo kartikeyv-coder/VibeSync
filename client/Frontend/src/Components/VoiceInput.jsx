@@ -13,6 +13,10 @@ const VoiceInput = ({ setMessage }) => {
     //Current Microphone Volume
     //stores the Current microphone Volume
     const [volume, setVolume] = useState(0)
+    // this state is used detect whether the user is speaking or not
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    // const [islanguages, setLangauges] = useState('en-IN');
 
     //A Analyser is a device that watches the microphone and tells us how strong the audio signal is.
     const analyserRef = useRef(null);
@@ -111,9 +115,12 @@ const VoiceInput = ({ setMessage }) => {
     const checkVolume = () => {
         if (!analyserRef.current) return;
 
-        const analyzer = analyzer.current;
+        const analyzer = analyserRef.current;
 
-        const dataArray = new Uint8Array(analyserRef.frequencyBinCount);
+        console.log("Analyzer:", analyzer);
+        console.log("Frequency Bin Count:", analyzer.frequencyBinCount);
+
+        const dataArray = new Uint8Array(analyzer.frequencyBinCount);
 
         //this will store the waveform of the audio signal
         analyzer.getByteTimeDomainData(dataArray);
@@ -127,10 +134,22 @@ const VoiceInput = ({ setMessage }) => {
         }
         // A useful method to calculate   the average strength of the audio signal.
         const rms = Math.sqrt(sum / dataArray.length);
+
+        console.log("RMS:", rms);
         //the volume will not   go above the 100
         const currentVolume = Math.min(rms * 500, 100);
 
         setVolume(currentVolume);
+        //Check whether microphone is receiving voice
+        const threshold = 100 - sensitivity;
+        console.log("Volume", currentVolume)
+
+        if (currentVolume > threshold) {
+            setIsSpeaking(true);
+        } else {
+            setIsSpeaking(false)
+        }
+
 
         animationRef.current = requestAnimationFrame(checkVolume)
     }
@@ -179,6 +198,26 @@ const VoiceInput = ({ setMessage }) => {
                     onChange={(e) => { setSensitivity(Number(e.target.value)) }}
                 />
             </div>
+
+            {/* Languages  */}
+            {/* <select
+                value={islanguages}
+                onChange={(e) => setLangauges(e.target.value)}
+                className="px-2 py-2 rounded"
+            >
+                <option value="en-IN">English (India)</option>
+                <option value="en-US">English (US)</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="bn-IN">Bengali</option>
+                <option value="ta-IN">Tamil</option>
+                <option value="te-IN">Telugu</option>
+                <option value="mr-IN">Marathi</option>
+                <option value="gu-IN">Gujarati</option>
+                <option value="kn-IN">Kannada</option>
+                <option value="ml-IN">Malayalam</option>
+                <option value="pa-IN">Punjabi</option>
+            </select> */}
+
             <button
                 type='button'
                 onClick={startListening}
@@ -206,6 +245,18 @@ const VoiceInput = ({ setMessage }) => {
 
 
                     </div>
+                </div>
+
+                <div className='text-xs mt-1'>
+                    {isSpeaking ? (
+                        <span className='text-green-500'>
+                            🟢 Mic is receiving input
+                        </span>
+                    ) : (
+                        <span className='text-gray-400'>
+                            ⚪ No voice detected
+                        </span>
+                    )}
 
                 </div>
             </div>
